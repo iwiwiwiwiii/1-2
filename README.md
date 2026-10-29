@@ -1,45 +1,40 @@
-# Практическая работа
+# Практическая работа: Sequelize + SQLite
 
-Консольное приложение на Node.js: подключение к SQLite через Sequelize, создание таблицы, вставка данных, выборка и вывод в консоль.
+Проект включает две части: базовую (таблица автомобилей) и работу со связями (Авторы и Книги).
 
-## Таблица `cars`
+## Связь таблиц (Вариант A)
 
-| Поле          | Тип      | Ограничения              |
-|---------------|----------|--------------------------|
-| `id`          | INTEGER  | PK, autoincrement        |
-| `brand`       | STRING   | NOT NULL                 |
-| `model`       | STRING   | NOT NULL                 |
-| `year`        | INTEGER  | NOT NULL, 1900–2100      |
-| `price`       | FLOAT    | NOT NULL, ≥ 0            |
-| `isAvailable` | BOOLEAN  | NOT NULL, default `true` |
+Реализована связь **один-ко-многим (1:N)** между таблицами `Author` и `Book`.
+
+| Модель | Поле | Тип | Ограничения |
+|---|---|---|---|
+| **Author** | `id` | INTEGER | PK |
+| | `name` | STRING | NOT NULL |
+| | `country` | STRING | |
+| **Book** | `id` | INTEGER | PK |
+| | `title` | STRING | NOT NULL |
+| | `year` | INTEGER | |
+| | `genre` | STRING | |
+| | `authorId` | INTEGER | FK (создается автоматически) |
+
+Ассоциация задана в `models/index.js`:
+- `Author.hasMany(Book, { foreignKey: 'authorId', as: 'books' })`
+- `Book.belongsTo(Author, { foreignKey: 'authorId', as: 'author' })`
 
 ## Структура
-db.js подключение Sequelize к SQLite
-models/car.js модель Car
-index.js синхронизация, вставка, выборка, вывод
-package.json
-.gitignore
-README.md
+
+- `db.js` — подключение Sequelize
+- `models/car.js` — модель Car
+- `models/author.js` — модель Author
+- `models/book.js` — модель Book
+- `models/index.js` — определение ассоциаций
+- `index.js` — синхронизация, создание данных, выборка с `include`, вывод
+- `package.json`
+- `.gitignore`
+- `README.md`
 
 ## Запуск
 
 ```bash
 npm install
 npm start
-Создаёт database.sqlite, таблицу cars, добавляет 3 записи, выводит их и закрывает соединение.
-
-Вывод
-text
-Подключение к SQLite установлено.
-Таблица "cars" синхронизирована.
-Добавлено автомобилей: 3
-
-Список автомобилей в базе:
-───────────────────────────────────────────────────────────────────────────────────────────────
-#1 | Toyota Camry | 2022 г. | 2 750 000 ₽ | в продаже
-#2 | BMW X5 | 2021 г. | 6 300 000 ₽ | продано
-#3 | Lada Vesta | 2023 г. | 1 250 000 ₽ | в продаже
-───────────────────────────────────────────────────────────────────────────────────────────────
-Всего записей: 3
-
-Соединение с базой данных закрыто.

@@ -1,5 +1,6 @@
 const sequelize = require('./db');
 const Car = require('./models/car');
+const { Author, Book } = require('./models/index');
 
 async function main() {
   try {
@@ -7,46 +8,45 @@ async function main() {
     console.log('Подключение к SQLite установлено.');
 
     await sequelize.sync({ force: true });
-    console.log('Таблица "cars" синхронизирована.');
+    console.log('Таблицы синхронизированы.');
 
-    const cars = await Car.bulkCreate([
-      {
-        brand: 'Toyota',
-        model: 'Camry',
-        year: 2022,
-        price: 2_750_000,
-        isAvailable: true,
-      },
-      {
-        brand: 'BMW',
-        model: 'X5',
-        year: 2021,
-        price: 6_300_000,
-        isAvailable: false,
-      },
-      {
-        brand: 'Lada',
-        model: 'Vesta',
-        year: 2023,
-        price: 1_250_000,
-        isAvailable: true,
-      },
+    console.log('\n--- Автомобили ---');
+    await Car.bulkCreate([
+      { brand: 'Toyota', model: 'Camry', year: 2022, price: 2_750_000, isAvailable: true },
+      { brand: 'BMW', model: 'X5', year: 2021, price: 6_300_000, isAvailable: false },
     ]);
-    console.log(`Добавлено автомобилей: ${cars.length}`);
-
-    const allCars = await Car.findAll({ order: [['id', 'ASC']] });
-
-    console.log('\nСписок автомобилей в базе:');
-    console.log('─'.repeat(95));
+    
+    const allCars = await Car.findAll();
     allCars.forEach((car) => {
-      console.log(
-        `#${car.id} | ${car.brand} ${car.model} | ${car.year} г. | ` +
-          `${car.price.toLocaleString('ru-RU')} ₽ | ` +
-          `${car.isAvailable ? 'в продаже' : 'продано'}`
-      );
+      console.log(`#${car.id} | ${car.brand} ${car.model} | ${car.year} | ${car.price} руб.`);
     });
-    console.log('─'.repeat(95));
-    console.log(`Всего записей: ${allCars.length}`);
+
+    console.log('\n--- Авторы и книги ---');
+
+    const author1 = await Author.create({ name: 'Александр Пушкин', country: 'Россия' });
+    await author1.createBook({ title: 'Евгений Онегин', year: 1833, genre: 'Роман в стихах' });
+    await author1.createBook({ title: 'Капитанская дочка', year: 1836, genre: 'Исторический роман' });
+
+    const author2 = await Author.create({ name: 'Михаил Булгаков', country: 'Россия' });
+    await author2.createBook({ title: 'Мастер и Маргарита', year: 1967, genre: 'Мистика' });
+
+    const author3 = await Author.create({ name: 'Джоан Роулинг', country: 'Великобритания' });
+    await author3.createBook({ title: 'Гарри Поттер и философский камень', year: 1997, genre: 'Фэнтези' });
+
+    const authorsWithBooks = await Author.findAll({
+      include: {
+        model: Book,
+        as: 'books',
+      },
+    });
+
+    authorsWithBooks.forEach((a) => {
+      console.log(`\nАвтор: ${a.name} (${a.country})`);
+      a.books.forEach((b) => {
+        console.log(`  - ${b.title} (${b.year} г.), жанр: ${b.genre}`);
+      });
+    });
+
   } catch (error) {
     console.error('Ошибка:', error);
   } finally {
